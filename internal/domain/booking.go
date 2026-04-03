@@ -16,7 +16,7 @@ type Booking struct {
 	SlotID         string
 	UserID         string
 	Status         BookingStatus
-	ConferenceLink time.Time
+	ConferenceLink *string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
