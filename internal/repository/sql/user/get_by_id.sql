@@ -1,0 +1,1 @@
+SELECT id, email, role, created_at FROM users WHERE id = $1
