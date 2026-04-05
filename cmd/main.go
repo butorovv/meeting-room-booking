@@ -1,3 +1,12 @@
+// @title Room Booking Service API
+// @version 1.0
+// @description Сервис бронирования переговорок
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 package main
 
 import (
@@ -5,11 +14,14 @@ import (
 	"net/http"
 
 	"github.com/butorovv/meeting-room-booking/config"
+	_ "github.com/butorovv/meeting-room-booking/docs"
 	deliveryHttp "github.com/butorovv/meeting-room-booking/internal/delivery/http"
 	middleware "github.com/butorovv/meeting-room-booking/internal/delivery/middlewares"
 	"github.com/butorovv/meeting-room-booking/internal/repository"
 	"github.com/butorovv/meeting-room-booking/internal/usecase"
 	"github.com/butorovv/meeting-room-booking/pkg/logger"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -51,7 +63,8 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
-
+	
+	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 	mux.Handle("GET /rooms/list", authMiddleware(http.HandlerFunc(roomHandler.ListRooms)))
 	mux.Handle("POST /rooms/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(roomHandler.CreateRoom))))
 	mux.Handle("POST /rooms/{roomId}/schedule/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(scheduleHandler.CreateSchedule))))

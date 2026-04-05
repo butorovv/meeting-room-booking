@@ -28,6 +28,22 @@ func NewScheduleHandler(uc ScheduleUseCaseInterface) *ScheduleHandler {
 	}
 }
 
+// CreateSchedule godoc
+// @Summary Создать расписание
+// @Description Создаёт расписание для переговорки (только admin, один раз)
+// @Tags Schedules
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param roomId path string true "ID переговорки"
+// @Param request body transport.CreateScheduleRequest true "Данные расписания"
+// @Success 201 {object} map[string]interface{} "schedule"
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Failure 404 {object} transport.ErrorResponse
+// @Failure 409 {object} transport.ErrorResponse
+// @Router /rooms/{roomId}/schedule/create [post]
 func (h *ScheduleHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

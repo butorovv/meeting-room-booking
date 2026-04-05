@@ -33,6 +33,21 @@ func NewBookingHandler(uc BookingUseCaseInterface) *BookingHandler {
 	}
 }
 
+// CreateBooking godoc
+// @Summary Создать бронь
+// @Description Создаёт бронь на слот (только user)
+// @Tags Bookings
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body transport.CreateBookingRequest true "Данные брони"
+// @Success 201 {object} map[string]interface{} "booking"
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Failure 404 {object} transport.ErrorResponse
+// @Failure 409 {object} transport.ErrorResponse
+// @Router /bookings/create [post]
 func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -95,6 +110,16 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// MyBookings godoc
+// @Summary Мои брони
+// @Description Возвращает список броней текущего пользователя (только user)
+// @Tags Bookings
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "bookings"
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Router /bookings/my [get]
 func (h *BookingHandler) MyBookings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -126,6 +151,19 @@ func (h *BookingHandler) MyBookings(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CancelBooking godoc
+// @Summary Отменить бронь
+// @Description Отменяет бронь по ID (только user, только свою)
+// @Tags Bookings
+// @Produce json
+// @Security BearerAuth
+// @Param bookingId path string true "ID брони"
+// @Success 200 {object} map[string]interface{} "booking"
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Failure 404 {object} transport.ErrorResponse
+// @Router /bookings/{bookingId}/cancel [post]
 func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -166,6 +204,19 @@ func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListBookings godoc
+// @Summary Список всех броней
+// @Description Возвращает список всех броней с пагинацией (только admin)
+// @Tags Bookings
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Номер страницы" default(1)
+// @Param pageSize query int false "Размер страницы" default(20) maximum(100)
+// @Success 200 {object} transport.BookingsListResponse
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Router /bookings/list [get]
 func (h *BookingHandler) ListBookings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

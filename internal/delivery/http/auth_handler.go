@@ -27,6 +27,18 @@ func NewAuthHandler(uc AuthUseCaseInterface) *AuthHandler {
 	}
 }
 
+// DummyLogin godoc
+// @Summary Получить тестовый JWT токен
+// @Description Возвращает JWT токен для указанной роли (admin/user)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body transport.DummyLoginRequest true "Роль (admin/user)"
+// @Success 200 {object} transport.TokenResponse
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 415 {object} transport.ErrorResponse
+// @Failure 405 {object} transport.ErrorResponse
+// @Router /dummyLogin [post]
 func (h *AuthHandler) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

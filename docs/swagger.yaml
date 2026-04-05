@@ -1,0 +1,425 @@
+basePath: /
+definitions:
+  transport.BookingResponse:
+    properties:
+      conferenceLink:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      slotId:
+        type: string
+      status:
+        type: string
+      userId:
+        type: string
+    type: object
+  transport.BookingsListResponse:
+    properties:
+      bookings:
+        items:
+          $ref: '#/definitions/transport.BookingResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/transport.PaginationResponse'
+    type: object
+  transport.CreateBookingRequest:
+    properties:
+      createConferenceLink:
+        type: boolean
+      slotId:
+        type: string
+    type: object
+  transport.CreateRoomRequest:
+    properties:
+      capacity:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  transport.CreateScheduleRequest:
+    properties:
+      daysOfWeek:
+        items:
+          type: integer
+        type: array
+      endTime:
+        type: string
+      roomId:
+        type: string
+      startTime:
+        type: string
+    type: object
+  transport.DummyLoginRequest:
+    properties:
+      role:
+        type: string
+    type: object
+  transport.ErrorDetail:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  transport.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/transport.ErrorDetail'
+    type: object
+  transport.PaginationResponse:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  transport.TokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Сервис бронирования переговорок
+  title: Room Booking Service API
+  version: "1.0"
+paths:
+  /bookings/{bookingId}/cancel:
+    post:
+      description: Отменяет бронь по ID (только user, только свою)
+      parameters:
+      - description: ID брони
+        in: path
+        name: bookingId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: booking
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Отменить бронь
+      tags:
+      - Bookings
+  /bookings/create:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт бронь на слот (только user)
+      parameters:
+      - description: Данные брони
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/transport.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: booking
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать бронь
+      tags:
+      - Bookings
+  /bookings/list:
+    get:
+      description: Возвращает список всех броней с пагинацией (только admin)
+      parameters:
+      - default: 1
+        description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Размер страницы
+        in: query
+        maximum: 100
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.BookingsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список всех броней
+      tags:
+      - Bookings
+  /bookings/my:
+    get:
+      description: Возвращает список броней текущего пользователя (только user)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: bookings
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Мои брони
+      tags:
+      - Bookings
+  /dummyLogin:
+    post:
+      consumes:
+      - application/json
+      description: Возвращает JWT токен для указанной роли (admin/user)
+      parameters:
+      - description: Роль (admin/user)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/transport.DummyLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "415":
+          description: Unsupported Media Type
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Получить тестовый JWT токен
+      tags:
+      - Auth
+  /rooms/{roomId}/schedule/create:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт расписание для переговорки (только admin, один раз)
+      parameters:
+      - description: ID переговорки
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Данные расписания
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/transport.CreateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: schedule
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать расписание
+      tags:
+      - Schedules
+  /rooms/{roomId}/slots/list:
+    get:
+      description: Возвращает список доступных слотов по переговорке и дате
+      parameters:
+      - description: ID переговорки
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Дата (YYYY-MM-DD)
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: slots
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Доступные слоты
+      tags:
+      - Slots
+  /rooms/create:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новую переговорку (только admin)
+      parameters:
+      - description: Данные переговорки
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/transport.CreateRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: room
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать переговорку
+      tags:
+      - Rooms
+  /rooms/list:
+    get:
+      description: Возвращает список всех переговорок
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: rooms
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список переговорок
+      tags:
+      - Rooms
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

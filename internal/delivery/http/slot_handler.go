@@ -27,6 +27,19 @@ func NewSlotHandler(uc SlotUseCaseInterface) *SlotHandler {
 	}
 }
 
+// GetAvailableSlots godoc
+// @Summary Доступные слоты
+// @Description Возвращает список доступных слотов по переговорке и дате
+// @Tags Slots
+// @Produce json
+// @Security BearerAuth
+// @Param roomId path string true "ID переговорки"
+// @Param date query string true "Дата (YYYY-MM-DD)"
+// @Success 200 {object} map[string]interface{} "slots"
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 404 {object} transport.ErrorResponse
+// @Router /rooms/{roomId}/slots/list [get]
 func (h *SlotHandler) GetAvailableSlots(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	roomID := r.PathValue("roomId")

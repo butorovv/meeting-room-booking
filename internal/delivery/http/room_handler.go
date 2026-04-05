@@ -29,6 +29,19 @@ func NewRoomHandler(uc RoomUseCaseInterface) *RoomHandler {
 	}
 }
 
+// CreateRoom godoc
+// @Summary Создать переговорку
+// @Description Создаёт новую переговорку (только admin)
+// @Tags Rooms
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body transport.CreateRoomRequest true "Данные переговорки"
+// @Success 201 {object} map[string]interface{} "room"
+// @Failure 400 {object} transport.ErrorResponse
+// @Failure 401 {object} transport.ErrorResponse
+// @Failure 403 {object} transport.ErrorResponse
+// @Router /rooms/create [post]
 func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -67,6 +80,15 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListRooms godoc
+// @Summary Список переговорок
+// @Description Возвращает список всех переговорок
+// @Tags Rooms
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "rooms"
+// @Failure 401 {object} transport.ErrorResponse
+// @Router /rooms/list [get]
 func (h *RoomHandler) ListRooms(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
