@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	middleware "github.com/butorovv/meeting-room-booking/internal/delivery/middlewares"
 	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
@@ -34,11 +35,34 @@ func NewBookingHandler(uc BookingUseCaseInterface) *BookingHandler {
 
 func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID, _ := middleware.UserIDFromContext(ctx)
+
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		h.rs.Error(ctx, w, http.StatusUnauthorized, "CreateBooking", transport.ErrUnauthorized, nil)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "CreateBooking", transport.ErrInvalidRequest, nil)
+		return
+	}
+
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		h.rs.Error(ctx, w, http.StatusUnsupportedMediaType, "CreateBooking", transport.ErrInvalidRequest, nil)
+		return
+	}
 
 	var req transport.CreateBookingRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
 		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateBooking", transport.ErrInvalidRequest, err)
+		return
+	}
+
+	if strings.TrimSpace(req.SlotID) == "" {
+		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateBooking", transport.ErrInvalidRequest, nil)
 		return
 	}
 
@@ -50,24 +74,46 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	booking, err := h.uc.CreateBooking(ctx, userID, req.SlotID, conferenceLink)
 	if err != nil {
-		if err == domain.ErrSlotInPast {
+		switch err {
+		case domain.ErrSlotNotFound:
+			h.rs.Error(ctx, w, http.StatusNotFound, "CreateBooking", transport.ErrSlotNotFound, err)
+			return
+		case domain.ErrSlotInPast:
 			h.rs.Error(ctx, w, http.StatusBadRequest, "CreateBooking", transport.ErrInvalidRequest, err)
 			return
-		}
-		if err == domain.ErrSlotAlreadyBooked {
+		case domain.ErrSlotAlreadyBooked:
 			h.rs.Error(ctx, w, http.StatusConflict, "CreateBooking", transport.ErrSlotAlreadyBooked, err)
 			return
+		default:
+			h.rs.Error(ctx, w, http.StatusInternalServerError, "CreateBooking", transport.ErrInternalError, err)
+			return
 		}
-		h.rs.Error(ctx, w, http.StatusInternalServerError, "CreateBooking", transport.ErrInternalError, err)
-		return
 	}
 
-	h.rs.Send(ctx, w, http.StatusCreated, transport.ToBookingResponse(booking))
+	h.rs.Send(ctx, w, http.StatusCreated, map[string]interface{}{
+		"booking": transport.ToBookingResponse(booking),
+	})
 }
 
 func (h *BookingHandler) MyBookings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID, _ := middleware.UserIDFromContext(ctx)
+
+	role, ok := middleware.RoleFromContext(ctx)
+	if !ok || role != "user" {
+		h.rs.Error(ctx, w, http.StatusForbidden, "MyBookings", transport.ErrForbidden, nil)
+		return
+	}
+
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		h.rs.Error(ctx, w, http.StatusUnauthorized, "MyBookings", transport.ErrUnauthorized, nil)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "MyBookings", transport.ErrInvalidRequest, nil)
+		return
+	}
 
 	bookings, err := h.uc.GetUserBookings(ctx, userID)
 	if err != nil {
@@ -75,37 +121,78 @@ func (h *BookingHandler) MyBookings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.rs.Send(ctx, w, http.StatusOK, map[string]interface{}{"bookings": transport.ToBookingResponseList(bookings)})
+	h.rs.Send(ctx, w, http.StatusOK, map[string]interface{}{
+		"bookings": transport.ToBookingResponseList(bookings),
+	})
 }
 
 func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	bookingID := r.PathValue("bookingId")
-	userID, _ := middleware.UserIDFromContext(ctx)
 
-	booking, err := h.uc.CancelBooking(ctx, bookingID, userID)
-	if err != nil {
-		h.rs.Error(ctx, w, http.StatusInternalServerError, "CancelBooking", transport.ErrInternalError, err)
+	bookingID := r.PathValue("bookingId")
+	if strings.TrimSpace(bookingID) == "" {
+		h.rs.Error(ctx, w, http.StatusBadRequest, "CancelBooking", transport.ErrInvalidRequest, nil)
 		return
 	}
 
-	h.rs.Send(ctx, w, http.StatusOK, transport.ToBookingResponse(booking))
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		h.rs.Error(ctx, w, http.StatusUnauthorized, "CancelBooking", transport.ErrUnauthorized, nil)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "CancelBooking", transport.ErrInvalidRequest, nil)
+		return
+	}
+
+	booking, err := h.uc.CancelBooking(ctx, bookingID, userID)
+	if err != nil {
+		switch err {
+		case domain.ErrBookingNotFound:
+			h.rs.Error(ctx, w, http.StatusNotFound, "CancelBooking", transport.ErrBookingNotFound, err)
+			return
+		case domain.ErrForbidden:
+			h.rs.Error(ctx, w, http.StatusForbidden, "CancelBooking", transport.ErrForbidden, err)
+			return
+		default:
+			h.rs.Error(ctx, w, http.StatusInternalServerError, "CancelBooking", transport.ErrInternalError, err)
+			return
+		}
+	}
+
+	h.rs.Send(ctx, w, http.StatusOK, map[string]interface{}{
+		"booking": transport.ToBookingResponse(booking),
+	})
 }
 
 func (h *BookingHandler) ListBookings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	if r.Method != http.MethodGet {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "ListBookings", transport.ErrInvalidRequest, nil)
+		return
+	}
+
 	page := 1
 	pageSize := 20
 
 	if p := r.URL.Query().Get("page"); p != "" {
-		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
-			page = parsed
+		parsed, err := strconv.Atoi(p)
+		if err != nil || parsed < 1 {
+			h.rs.Error(ctx, w, http.StatusBadRequest, "ListBookings", transport.ErrInvalidRequest, nil)
+			return
 		}
+		page = parsed
 	}
+
 	if ps := r.URL.Query().Get("pageSize"); ps != "" {
-		if parsed, err := strconv.Atoi(ps); err == nil && parsed > 0 && parsed <= 100 {
-			pageSize = parsed
+		parsed, err := strconv.Atoi(ps)
+		if err != nil || parsed < 1 || parsed > 100 {
+			h.rs.Error(ctx, w, http.StatusBadRequest, "ListBookings", transport.ErrInvalidRequest, nil)
+			return
 		}
+		pageSize = parsed
 	}
 
 	bookings, total, err := h.uc.GetAllBookings(ctx, page, pageSize)

@@ -1,4 +1,4 @@
-.PHONY: up down build seed test e2e clean mocks test-cover cover filter-cover
+.PHONY: up down build seed test e2e clean mocks test-cover cover filter-cover e2e-positive e2e-negative
 
 # Переменные
 DOCKER_COMPOSE = docker-compose
@@ -72,10 +72,23 @@ cover: test filter-cover
 	@echo "======== Coverage ========"
 	@go tool cover -func=$(FILTERED_COVERFILE) | grep total
 
-# Запуск E2E тестов
+# Запуск E2E тестов (основной скрипт)
 e2e:
-	chmod +x ./scripts/e2e_test.sh
-	./scripts/e2e_test.sh
+	@echo "======== Running all E2E tests ========"
+	chmod +x ./scripts/e2e_test1.sh
+	bash ./scripts/e2e_test1.sh
+
+# Запуск только позитивных E2E тестов
+e2e-positive:
+	@echo "======== Running positive E2E tests ========"
+	chmod +x ./scripts/e2e_test_positive.sh
+	bash ./scripts/e2e_test_positive.sh
+
+# Запуск только негативных E2E тестов
+e2e-negative:
+	@echo "======== Running negative E2E tests ========"
+	chmod +x ./scripts/e2e_test_negative.sh
+	bash ./scripts/e2e_test_negative.sh
 
 # Очистка
 clean:
@@ -93,5 +106,7 @@ help:
 	@echo "  make mocks        - Generate mocks for tests"
 	@echo "  make test         - Run unit tests"
 	@echo "  make test-cover   - Run tests with coverage (>40%)"
-	@echo "  make e2e          - Run E2E tests"
+	@echo "  make e2e          - Run all E2E tests"
+	@echo "  make e2e-positive - Run positive E2E tests only"
+	@echo "  make e2e-negative - Run negative E2E tests only"
 	@echo "  make clean        - Clean everything"

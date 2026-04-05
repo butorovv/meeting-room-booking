@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
 	"github.com/butorovv/meeting-room-booking/pkg/http_response"
@@ -29,8 +30,21 @@ func NewAuthHandler(uc AuthUseCaseInterface) *AuthHandler {
 func (h *AuthHandler) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	if r.Method != http.MethodPost {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "DummyLogin", transport.ErrInvalidRequest, nil)
+		return
+	}
+
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		h.rs.Error(ctx, w, http.StatusUnsupportedMediaType, "DummyLogin", transport.ErrInvalidRequest, nil)
+		return
+	}
+
 	var req transport.DummyLoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
 		h.rs.Error(ctx, w, http.StatusBadRequest, "DummyLogin", transport.ErrInvalidRequest, err)
 		return
 	}

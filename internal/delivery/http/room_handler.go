@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
 	"github.com/butorovv/meeting-room-booking/internal/domain"
@@ -31,8 +32,21 @@ func NewRoomHandler(uc RoomUseCaseInterface) *RoomHandler {
 func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	if r.Method != http.MethodPost {
+		h.rs.Error(ctx, w, http.StatusMethodNotAllowed, "CreateRoom", transport.ErrInvalidRequest, nil)
+		return
+	}
+
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		h.rs.Error(ctx, w, http.StatusUnsupportedMediaType, "CreateRoom", transport.ErrInvalidRequest, nil)
+		return
+	}
+
 	var req transport.CreateRoomRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
 		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateRoom", transport.ErrInvalidRequest, err)
 		return
 	}
@@ -48,7 +62,9 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.rs.Send(ctx, w, http.StatusCreated, transport.ToRoomResponse(room))
+	h.rs.Send(ctx, w, http.StatusCreated, map[string]interface{}{
+		"room": transport.ToRoomResponse(room),
+	})
 }
 
 func (h *RoomHandler) ListRooms(w http.ResponseWriter, r *http.Request) {
@@ -60,5 +76,7 @@ func (h *RoomHandler) ListRooms(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.rs.Send(ctx, w, http.StatusOK, map[string]interface{}{"rooms": transport.ToRoomResponseList(rooms)})
+	h.rs.Send(ctx, w, http.StatusOK, map[string]interface{}{
+		"rooms": transport.ToRoomResponseList(rooms),
+	})
 }

@@ -18,7 +18,7 @@ func NewResponseSender(log logger.Logger) *ResponseSender {
 }
 
 func (rs *ResponseSender) Send(ctx context.Context, w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		rs.log.ErrorContext(ctx, "failed to encode response", "error", err)

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
 	"github.com/butorovv/meeting-room-booking/internal/domain"
@@ -36,8 +37,17 @@ func (h *SlotHandler) GetAvailableSlots(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	if _, err := time.Parse("2006-01-02", date); err != nil {
+		h.rs.Error(ctx, w, http.StatusBadRequest, "GetAvailableSlots", transport.ErrInvalidRequest, nil)
+		return
+	}
+
 	slots, err := h.uc.GetAvailableSlots(ctx, roomID, date)
 	if err != nil {
+		if err == domain.ErrRoomNotFound {
+			h.rs.Error(ctx, w, http.StatusNotFound, "GetAvailableSlots", transport.ErrRoomNotFound, err)
+			return
+		}
 		h.rs.Error(ctx, w, http.StatusInternalServerError, "GetAvailableSlots", transport.ErrInternalError, err)
 		return
 	}

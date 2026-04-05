@@ -2,6 +2,7 @@ package transport
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/butorovv/meeting-room-booking/internal/domain"
@@ -14,11 +15,11 @@ type CreateRoomRequest struct {
 }
 
 func (r *CreateRoomRequest) Validate() error {
-	if r.Name == "" {
+	if strings.TrimSpace(r.Name) == "" {
 		return fmt.Errorf("name is required")
 	}
 	if r.Capacity != nil && *r.Capacity <= 0 {
-		return fmt.Errorf("capacity must be positive")
+		return fmt.Errorf("capacity must be greater than 0")
 	}
 	return nil
 }

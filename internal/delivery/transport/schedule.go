@@ -2,6 +2,7 @@ package transport
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/butorovv/meeting-room-booking/internal/domain"
@@ -15,7 +16,7 @@ type CreateScheduleRequest struct {
 }
 
 func (r *CreateScheduleRequest) Validate() error {
-	if r.RoomID == "" {
+	if strings.TrimSpace(r.RoomID) == "" {
 		return fmt.Errorf("roomId is required")
 	}
 	if len(r.DaysOfWeek) == 0 {
@@ -26,12 +27,24 @@ func (r *CreateScheduleRequest) Validate() error {
 			return fmt.Errorf("daysOfWeek must be between 1 and 7")
 		}
 	}
-	if r.StartTime == "" {
+	if strings.TrimSpace(r.StartTime) == "" {
 		return fmt.Errorf("startTime is required")
 	}
-	if r.EndTime == "" {
+	if strings.TrimSpace(r.EndTime) == "" {
 		return fmt.Errorf("endTime is required")
 	}
+
+	if _, err := time.Parse("15:04", r.StartTime); err != nil {
+		return fmt.Errorf("startTime must be in format HH:MM")
+	}
+	if _, err := time.Parse("15:04", r.EndTime); err != nil {
+		return fmt.Errorf("endTime must be in format HH:MM")
+	}
+
+	if r.StartTime >= r.EndTime {
+		return fmt.Errorf("startTime must be less than endTime")
+	}
+
 	return nil
 }
 

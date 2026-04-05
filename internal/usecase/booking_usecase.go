@@ -61,13 +61,11 @@ func (uc *BookingUseCase) CreateBooking(ctx context.Context, userID, slotID stri
 }
 
 func (uc *BookingUseCase) CancelBooking(ctx context.Context, bookingID, userID string) (*domain.Booking, error) {
-	// получаем бронь из бд
 	booking, err := uc.bookingRepo.GetByID(ctx, bookingID)
 	if err != nil {
 		return nil, err
 	}
 
-	// проверяем что бронь принадлежит пользователю
 	if booking.UserID != userID {
 		return nil, domain.ErrForbidden
 	}

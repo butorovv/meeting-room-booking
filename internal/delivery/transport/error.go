@@ -19,4 +19,5 @@ var (
 	ErrSlotAlreadyBooked = ErrorDetail{Code: "SLOT_ALREADY_BOOKED", Message: "slot is already booked"}
 	ErrScheduleExists    = ErrorDetail{Code: "SCHEDULE_EXISTS", Message: "schedule already exists"}
 	ErrInternalError     = ErrorDetail{Code: "INTERNAL_ERROR", Message: "internal server error"}
+	ErrBookingNotFound   = ErrorDetail{Code: "BOOKING_NOT_FOUND", Message: "booking not found"}
 )
