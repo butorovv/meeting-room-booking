@@ -1,0 +1,1 @@
+SELECT id, name, description, capacity, created_at FROM rooms ORDER BY created_at

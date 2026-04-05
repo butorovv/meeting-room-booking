@@ -16,6 +16,7 @@ type PgxIface interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	Ping(ctx context.Context) error
+	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
 }
 
 func NewDB(cfg *config.Config) (*pgxpool.Pool, error) {

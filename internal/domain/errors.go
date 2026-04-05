@@ -14,4 +14,11 @@ var (
 	ErrInternalServer    = errors.New("internal server error")
 	ErrHTTPMethod        = errors.New("method not allowed")
 	ErrRequestParams     = errors.New("invalid request parameters")
+
+	ErrRoomNotFound      = errors.New("room not found")
+	ErrScheduleExists    = errors.New("schedule already exists")
+	ErrSlotNotFound      = errors.New("slot not found")
+	ErrSlotInPast        = errors.New("slot is in the past")
+	ErrSlotAlreadyBooked = errors.New("slot is already booked")
+	ErrBookingNotFound   = errors.New("booking not found")
 )

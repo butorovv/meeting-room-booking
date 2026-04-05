@@ -1,0 +1,57 @@
+package http
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+
+	"github.com/butorovv/meeting-room-booking/internal/domain"
+	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
+	"github.com/butorovv/meeting-room-booking/pkg/http_response"
+	"github.com/butorovv/meeting-room-booking/pkg/logger"
+)
+
+type ScheduleUseCaseInterface interface {
+	CreateSchedule(ctx context.Context, roomID string, daysOfWeek []int, startTime, endTime string) (*domain.Schedule, error)
+}
+
+type ScheduleHandler struct {
+	uc ScheduleUseCaseInterface
+	rs *http_response.ResponseSender
+}
+
+func NewScheduleHandler(uc ScheduleUseCaseInterface) *ScheduleHandler {
+	return &ScheduleHandler{
+		uc: uc,
+		rs: http_response.NewResponseSender(logger.Global()),
+	}
+}
+
+func (h *ScheduleHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	roomID := r.PathValue("roomId")
+
+	var req transport.CreateScheduleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateSchedule", transport.ErrInvalidRequest, err)
+		return
+	}
+	req.RoomID = roomID
+
+	if err := req.Validate(); err != nil {
+		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateSchedule", transport.ErrInvalidRequest, err)
+		return
+	}
+
+	schedule, err := h.uc.CreateSchedule(ctx, req.RoomID, req.DaysOfWeek, req.StartTime, req.EndTime)
+	if err != nil {
+		if err == domain.ErrScheduleExists {
+			h.rs.Error(ctx, w, http.StatusConflict, "CreateSchedule", transport.ErrScheduleExists, err)
+			return
+		}
+		h.rs.Error(ctx, w, http.StatusInternalServerError, "CreateSchedule", transport.ErrInternalError, err)
+		return
+	}
+
+	h.rs.Send(ctx, w, http.StatusCreated, transport.ToScheduleResponse(schedule))
+}

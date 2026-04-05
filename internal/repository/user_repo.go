@@ -17,7 +17,7 @@ var getFixedDummySQL string
 var getUserByIDSQL string
 
 type UserRepository struct {
-	db PgxIface // ← интерфейс, не конкретный тип
+	db PgxIface
 }
 
 func NewUserRepository(db PgxIface) *UserRepository {
