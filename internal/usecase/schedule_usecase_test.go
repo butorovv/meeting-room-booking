@@ -16,8 +16,7 @@ func TestCreateSchedule_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
+	uc := NewScheduleUseCase(mockScheduleRepo)
 
 	mockScheduleRepo.EXPECT().
 		ExistsByRoomID(gomock.Any(), "room1").
@@ -25,10 +24,6 @@ func TestCreateSchedule_Success(t *testing.T) {
 
 	mockScheduleRepo.EXPECT().
 		Create(gomock.Any(), gomock.Any()).
-		Return(nil)
-
-	mockSlotRepo.EXPECT().
-		BatchCreate(gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	schedule, err := uc.CreateSchedule(context.Background(), "room1", []int{1, 2, 3}, "09:00", "18:00")
@@ -42,8 +37,7 @@ func TestCreateSchedule_AlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
+	uc := NewScheduleUseCase(mockScheduleRepo)
 
 	mockScheduleRepo.EXPECT().
 		ExistsByRoomID(gomock.Any(), "room1").
@@ -59,8 +53,7 @@ func TestCreateSchedule_ExistsCheckError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
+	uc := NewScheduleUseCase(mockScheduleRepo)
 
 	mockScheduleRepo.EXPECT().
 		ExistsByRoomID(gomock.Any(), "room1").
@@ -76,8 +69,7 @@ func TestCreateSchedule_CreateError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
+	uc := NewScheduleUseCase(mockScheduleRepo)
 
 	mockScheduleRepo.EXPECT().
 		ExistsByRoomID(gomock.Any(), "room1").
@@ -85,31 +77,6 @@ func TestCreateSchedule_CreateError(t *testing.T) {
 
 	mockScheduleRepo.EXPECT().
 		Create(gomock.Any(), gomock.Any()).
-		Return(assert.AnError)
-
-	_, err := uc.CreateSchedule(context.Background(), "room1", []int{1, 2, 3}, "09:00", "18:00")
-
-	assert.Error(t, err)
-}
-
-func TestCreateSchedule_BatchCreateError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
-
-	mockScheduleRepo.EXPECT().
-		ExistsByRoomID(gomock.Any(), "room1").
-		Return(false, nil)
-
-	mockScheduleRepo.EXPECT().
-		Create(gomock.Any(), gomock.Any()).
-		Return(nil)
-
-	mockSlotRepo.EXPECT().
-		BatchCreate(gomock.Any(), gomock.Any()).
 		Return(assert.AnError)
 
 	_, err := uc.CreateSchedule(context.Background(), "room1", []int{1, 2, 3}, "09:00", "18:00")
@@ -122,8 +89,7 @@ func TestCreateSchedule_EmptyDaysOfWeek(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockScheduleRepo := mock_usecase.NewMockScheduleRepositoryInterface(ctrl)
-	mockSlotRepo := mock_usecase.NewMockSlotRepositoryInterface(ctrl)
-	uc := NewScheduleUseCase(mockScheduleRepo, mockSlotRepo)
+	uc := NewScheduleUseCase(mockScheduleRepo)
 
 	mockScheduleRepo.EXPECT().
 		ExistsByRoomID(gomock.Any(), "room1").

@@ -17,13 +17,11 @@ type ScheduleRepositoryInterface interface {
 
 type ScheduleUseCase struct {
 	scheduleRepo ScheduleRepositoryInterface
-	slotRepo     SlotRepositoryInterface
 }
 
-func NewScheduleUseCase(scheduleRepo ScheduleRepositoryInterface, slotRepo SlotRepositoryInterface) *ScheduleUseCase {
+func NewScheduleUseCase(scheduleRepo ScheduleRepositoryInterface) *ScheduleUseCase {
 	return &ScheduleUseCase{
 		scheduleRepo: scheduleRepo,
-		slotRepo:     slotRepo,
 	}
 }
 
@@ -49,14 +47,5 @@ func (uc *ScheduleUseCase) CreateSchedule(ctx context.Context, roomID string, da
 		return nil, err
 	}
 
-	startDate := time.Now().UTC()
-	endDate := startDate.AddDate(0, 0, 30)
-	slots := schedule.GenerateSlots(startDate, endDate)
-	if len(slots) > 0 {
-		err = uc.slotRepo.BatchCreate(ctx, slots)
-		if err != nil {
-			return nil, err
-		}
-	}
 	return schedule, nil
 }
