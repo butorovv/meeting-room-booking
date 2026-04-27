@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	_ "embed"
+	"time"
 
 	"github.com/butorovv/meeting-room-booking/internal/domain"
 )
@@ -33,12 +34,15 @@ func (r *ScheduleRepository) Create(ctx context.Context, schedule *domain.Schedu
 
 func (r *ScheduleRepository) GetByRoomID(ctx context.Context, roomID string) (*domain.Schedule, error) {
 	var s domain.Schedule
+	var startTime, endTime time.Time
 	err := r.db.QueryRow(ctx, getScheduleByRoomSQL, roomID).Scan(
-		&s.ID, &s.RoomID, &s.DaysMask, &s.StartTime, &s.EndTime, &s.CreatedAt,
+		&s.ID, &s.RoomID, &s.DaysMask, &startTime, &endTime, &s.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
+	s.StartTime = startTime.Format("15:04")
+	s.EndTime = endTime.Format("15:04")
 	return &s, nil
 }
 
