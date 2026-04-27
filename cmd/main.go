@@ -63,7 +63,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
-	
+
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 	mux.Handle("GET /rooms/list", authMiddleware(http.HandlerFunc(roomHandler.ListRooms)))
 	mux.Handle("POST /rooms/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(roomHandler.CreateRoom))))

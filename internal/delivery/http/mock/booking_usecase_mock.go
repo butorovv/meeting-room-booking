@@ -6,8 +6,8 @@ package mock
 
 import (
 	context "context"
-	reflect "reflect"
 	domain "github.com/butorovv/meeting-room-booking/internal/domain"
+	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 )
