@@ -6,8 +6,9 @@ package mock
 
 import (
 	context "context"
-	reflect "reflect"
 	domain "github.com/butorovv/meeting-room-booking/internal/domain"
+	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -51,18 +52,18 @@ func (mr *MockBookingUseCaseInterfaceMockRecorder) CancelBooking(ctx, bookingID,
 }
 
 // CreateBooking mocks base method.
-func (m *MockBookingUseCaseInterface) CreateBooking(ctx context.Context, userID, slotID string, conferenceLink *string) (*domain.Booking, error) {
+func (m *MockBookingUseCaseInterface) CreateBooking(ctx context.Context, userID, roomID string, startTime, endTime time.Time, conferenceLink *string) (*domain.Booking, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateBooking", ctx, userID, slotID, conferenceLink)
+	ret := m.ctrl.Call(m, "CreateBooking", ctx, userID, roomID, startTime, endTime, conferenceLink)
 	ret0, _ := ret[0].(*domain.Booking)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateBooking indicates an expected call of CreateBooking.
-func (mr *MockBookingUseCaseInterfaceMockRecorder) CreateBooking(ctx, userID, slotID, conferenceLink interface{}) *gomock.Call {
+func (mr *MockBookingUseCaseInterfaceMockRecorder) CreateBooking(ctx, userID, roomID, startTime, endTime, conferenceLink interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBooking", reflect.TypeOf((*MockBookingUseCaseInterface)(nil).CreateBooking), ctx, userID, slotID, conferenceLink)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBooking", reflect.TypeOf((*MockBookingUseCaseInterface)(nil).CreateBooking), ctx, userID, roomID, startTime, endTime, conferenceLink)
 }
 
 // GetAllBookings mocks base method.
