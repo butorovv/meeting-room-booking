@@ -150,6 +150,8 @@ SLOTS_RESPONSE=$(curl -s -X GET "$BASE_URL/rooms/$ROOM_ID/slots/list?date=$DATE"
     -H "Authorization: Bearer $ADMIN_TOKEN")
 
 SLOT_ID=$(echo $SLOTS_RESPONSE | jq -r '.slots[0].id')
+SLOT_START=$(echo $SLOTS_RESPONSE | jq -r '.slots[0].start')
+SLOT_END=$(echo $SLOTS_RESPONSE | jq -r '.slots[0].end')
 if [ "$SLOT_ID" != "null" ] && [ -n "$SLOT_ID" ]; then
     print_result 0 "Slots received, first slot ID: $SLOT_ID"
 else
@@ -172,7 +174,7 @@ echo -e "\n${YELLOW}6. Bookings Tests${NC}"
 BOOKING_RESPONSE=$(curl -s -X POST $BASE_URL/bookings/create \
     -H "Authorization: Bearer $USER_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "{\"slotId\":\"$SLOT_ID\"}")
+    -d "{\"roomId\":\"$ROOM_ID\",\"startTime\":\"$SLOT_START\",\"endTime\":\"$SLOT_END\"}")
 
 BOOKING_ID=$(echo $BOOKING_RESPONSE | jq -r '.booking.id')
 if [ "$BOOKING_ID" != "null" ] && [ -n "$BOOKING_ID" ]; then
@@ -192,7 +194,7 @@ fi
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST $BASE_URL/bookings/create \
     -H "Authorization: Bearer $USER_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "{\"slotId\":\"$SLOT_ID\"}")
+    -d "{\"roomId\":\"$ROOM_ID\",\"startTime\":\"$SLOT_START\",\"endTime\":\"$SLOT_END\"}")
 if [ "$HTTP_CODE" -eq 409 ]; then
     print_result 0 "Duplicate booking returns 409"
 else
