@@ -10,6 +10,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/butorovv/meeting-room-booking/internal/repository"
 	"github.com/butorovv/meeting-room-booking/internal/usecase"
 	"github.com/butorovv/meeting-room-booking/pkg/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -28,24 +30,28 @@ func main() {
 	cfg := config.Load()
 	logger.Global().Info("Starting server", "port", cfg.AppPort)
 
-	db, err := repository.NewDB(cfg)
+	dbPool, err := pgxpool.New(context.Background(), cfg.DBPath())
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
 
-	userRepo := repository.NewUserRepository(db)
-	roomRepo := repository.NewRoomRepository(db)
-	scheduleRepo := repository.NewScheduleRepository(db)
-	slotRepo := repository.NewSlotRepository(db)
-	bookingRepo := repository.NewBookingRepository(db)
+	userRepo := repository.NewUserRepository(dbPool)
+	roomRepo := repository.NewRoomRepository(dbPool)
+	scheduleRepo := repository.NewScheduleRepository(dbPool)
+	bookingRepo := repository.NewBookingRepository(dbPool)
 
 	// Инициализация usecase
 	authUC := usecase.NewAuthUseCase(userRepo, cfg.JWTSecret)
 	roomUC := usecase.NewRoomUseCase(roomRepo)
-	scheduleUC := usecase.NewScheduleUseCase(scheduleRepo, slotRepo)
-	slotUC := usecase.NewSlotUseCase(slotRepo)
-	bookingUC := usecase.NewBookingUseCase(bookingRepo, slotRepo)
+	scheduleUC := usecase.NewScheduleUseCase(scheduleRepo)
+	slotUC := usecase.NewSlotUseCase(scheduleRepo, bookingRepo)
+	bookingUC := usecase.NewBookingUseCase(
+		dbPool,
+		bookingRepo,
+		roomRepo,
+		scheduleRepo,
+	)
 
 	// Инициализация handlers
 	authHandler := deliveryHttp.NewAuthHandler(authUC)
@@ -63,7 +69,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
-	
+
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 	mux.Handle("GET /rooms/list", authMiddleware(http.HandlerFunc(roomHandler.ListRooms)))
 	mux.Handle("POST /rooms/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(roomHandler.CreateRoom))))
