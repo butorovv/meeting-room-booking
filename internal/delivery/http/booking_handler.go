@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	middleware "github.com/butorovv/meeting-room-booking/internal/delivery/middlewares"
 	"github.com/butorovv/meeting-room-booking/internal/delivery/transport"
@@ -15,7 +16,7 @@ import (
 )
 
 type BookingUseCaseInterface interface {
-	CreateBooking(ctx context.Context, userID, slotID string, conferenceLink *string) (*domain.Booking, error)
+	CreateBooking(ctx context.Context, userID, roomID string, startTime, endTime time.Time, conferenceLink *string) (*domain.Booking, error)
 	CancelBooking(ctx context.Context, bookingID, userID string) (*domain.Booking, error)
 	GetUserBookings(ctx context.Context, userID string) ([]*domain.Booking, error)
 	GetAllBookings(ctx context.Context, page, pageSize int) ([]*domain.Booking, int, error)
@@ -76,24 +77,30 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimSpace(req.SlotID) == "" {
+	if err := req.Validate(); err != nil {
 		h.rs.Error(ctx, w, http.StatusBadRequest, "CreateBooking", transport.ErrInvalidRequest, nil)
 		return
 	}
 
+	startTime, _ := time.Parse(time.RFC3339, req.StartTime)
+	endTime, _ := time.Parse(time.RFC3339, req.EndTime)
+
 	var conferenceLink *string
 	if req.CreateConferenceLink {
-		link := "https://meet.example.com/" + req.SlotID
+		link := "https://meet.example.com/" + req.RoomID + "/" + startTime.UTC().Format("20060102T150405Z")
 		conferenceLink = &link
 	}
 
-	booking, err := h.uc.CreateBooking(ctx, userID, req.SlotID, conferenceLink)
+	booking, err := h.uc.CreateBooking(ctx, userID, req.RoomID, startTime, endTime, conferenceLink)
 	if err != nil {
 		switch err {
-		case domain.ErrSlotNotFound:
-			h.rs.Error(ctx, w, http.StatusNotFound, "CreateBooking", transport.ErrSlotNotFound, err)
+		case domain.ErrRoomNotFound:
+			h.rs.Error(ctx, w, http.StatusNotFound, "CreateBooking", transport.ErrRoomNotFound, err)
 			return
-		case domain.ErrSlotInPast:
+		case domain.ErrScheduleNotFound:
+			h.rs.Error(ctx, w, http.StatusNotFound, "CreateBooking", transport.ErrScheduleNotFound, err)
+			return
+		case domain.ErrSlotInPast, domain.ErrInvalidBookingTime:
 			h.rs.Error(ctx, w, http.StatusBadRequest, "CreateBooking", transport.ErrInvalidRequest, err)
 			return
 		case domain.ErrSlotAlreadyBooked:

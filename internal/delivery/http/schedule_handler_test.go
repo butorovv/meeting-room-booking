@@ -42,11 +42,13 @@ func TestScheduleHandler_CreateSchedule_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 
-	var resp transport.ScheduleResponse
+	var resp struct {
+		Schedule transport.ScheduleResponse `json:"schedule"`
+	}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Equal(t, "sch1", resp.ID)
-	assert.Equal(t, "room1", resp.RoomID)
+	assert.Equal(t, "sch1", resp.Schedule.ID)
+	assert.Equal(t, "room1", resp.Schedule.RoomID)
 }
 
 func TestScheduleHandler_CreateSchedule_AlreadyExists(t *testing.T) {

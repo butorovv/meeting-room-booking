@@ -65,6 +65,7 @@ func TestCreateRoom_InvalidRequest(t *testing.T) {
 	handler := NewRoomHandler(mockUC)
 
 	req := httptest.NewRequest(http.MethodPost, "/rooms/create", nil)
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
 	handler.CreateRoom(w, req)

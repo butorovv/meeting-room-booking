@@ -8,20 +8,42 @@ import (
 )
 
 type CreateBookingRequest struct {
-	SlotID               string `json:"slotId"`
+	RoomID               string `json:"roomId"`
+	StartTime            string `json:"startTime"`
+	EndTime              string `json:"endTime"`
 	CreateConferenceLink bool   `json:"createConferenceLink"`
 }
 
 func (r *CreateBookingRequest) Validate() error {
-	if r.SlotID == "" {
-		return fmt.Errorf("slotId is required")
+	if r.RoomID == "" {
+		return fmt.Errorf("roomId is required")
+	}
+	if r.StartTime == "" {
+		return fmt.Errorf("startTime is required")
+	}
+	if r.EndTime == "" {
+		return fmt.Errorf("endTime is required")
+	}
+	startTime, err := time.Parse(time.RFC3339, r.StartTime)
+	if err != nil {
+		return fmt.Errorf("startTime must be RFC3339")
+	}
+	endTime, err := time.Parse(time.RFC3339, r.EndTime)
+	if err != nil {
+		return fmt.Errorf("endTime must be RFC3339")
+	}
+	if endTime.Sub(startTime) != domain.SlotDuration {
+		return fmt.Errorf("duration must be 30 minutes")
 	}
 	return nil
 }
 
 type BookingResponse struct {
 	ID             string    `json:"id"`
-	SlotID         string    `json:"slotId"`
+	SlotID         *string   `json:"slotId,omitempty"`
+	RoomID         string    `json:"roomId"`
+	StartTime      time.Time `json:"startTime"`
+	EndTime        time.Time `json:"endTime"`
 	UserID         string    `json:"userId"`
 	Status         string    `json:"status"`
 	ConferenceLink *string   `json:"conferenceLink,omitempty"`
@@ -46,6 +68,9 @@ func ToBookingResponse(b *domain.Booking) *BookingResponse {
 	return &BookingResponse{
 		ID:             b.ID,
 		SlotID:         b.SlotID,
+		RoomID:         b.RoomID,
+		StartTime:      b.StartTime,
+		EndTime:        b.EndTime,
 		UserID:         b.UserID,
 		Status:         string(b.Status),
 		ConferenceLink: b.ConferenceLink,
