@@ -6,8 +6,8 @@ package mock
 
 import (
 	context "context"
-	reflect "reflect"
 	domain "github.com/butorovv/meeting-room-booking/internal/domain"
+	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -47,6 +47,21 @@ func (m *MockRoomRepositoryInterface) Create(ctx context.Context, room *domain.R
 func (mr *MockRoomRepositoryInterfaceMockRecorder) Create(ctx, room interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRoomRepositoryInterface)(nil).Create), ctx, room)
+}
+
+// ExistsByID mocks base method.
+func (m *MockRoomRepositoryInterface) ExistsByID(ctx context.Context, id string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExistsByID", ctx, id)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExistsByID indicates an expected call of ExistsByID.
+func (mr *MockRoomRepositoryInterfaceMockRecorder) ExistsByID(ctx, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExistsByID", reflect.TypeOf((*MockRoomRepositoryInterface)(nil).ExistsByID), ctx, id)
 }
 
 // List mocks base method.
