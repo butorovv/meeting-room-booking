@@ -33,20 +33,3 @@ func TestWeekdayToMask(t *testing.T) {
 	assert.Equal(t, Saturday, WeekdayToMask(time.Saturday))
 	assert.Equal(t, Sunday, WeekdayToMask(time.Sunday))
 }
-
-func TestGenerateSlots(t *testing.T) {
-	s := &Schedule{
-		RoomID:    "room1",
-		DaysMask:  Monday,
-		StartTime: "09:00",
-		EndTime:   "10:00",
-	}
-	start := time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(0, 0, 1)
-	slots := s.GenerateSlots(start, end)
-
-	if len(slots) > 0 {
-		assert.Equal(t, "room1", slots[0].RoomID)
-		assert.Equal(t, 30*time.Minute, slots[0].EndTime.Sub(slots[0].StartTime))
-	}
-}

@@ -23,10 +23,11 @@ func (p *GetAvailableSlotsParams) Validate() error {
 }
 
 type SlotResponse struct {
-	ID     string    `json:"id"`
-	RoomID string    `json:"roomId"`
-	Start  time.Time `json:"start"`
-	End    time.Time `json:"end"`
+	ID       string    `json:"id"`
+	RoomID   string    `json:"roomId"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	IsBooked bool      `json:"isBooked"`
 }
 
 func ToSlotResponse(s *domain.Slot) *SlotResponse {
@@ -34,10 +35,11 @@ func ToSlotResponse(s *domain.Slot) *SlotResponse {
 		return nil
 	}
 	return &SlotResponse{
-		ID:     s.ID,
-		RoomID: s.RoomID,
-		Start:  s.StartTime,
-		End:    s.EndTime,
+		ID:       s.ID,
+		RoomID:   s.RoomID,
+		Start:    s.StartTime,
+		End:      s.EndTime,
+		IsBooked: s.IsBooked,
 	}
 }
 

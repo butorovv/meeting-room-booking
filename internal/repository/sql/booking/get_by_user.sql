@@ -1,5 +1,6 @@
-SELECT b.id, b.slot_id, b.user_id, b.status, b.conference_link, b.created_at, b.updated_at
+SELECT b.id, b.slot_id, b.room_id, b.start_time, b.end_time, b.user_id, b.status, b.conference_link, b.created_at, b.updated_at
 FROM bookings b
-JOIN slots s ON b.slot_id = s.id
-WHERE b.user_id = $1 AND s.start_time > NOW()
-ORDER BY s.start_time
+WHERE b.user_id = $1
+  AND b.start_time > NOW()
+  AND b.status = 'active'
+ORDER BY b.start_time;

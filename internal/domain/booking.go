@@ -13,12 +13,21 @@ const (
 
 type Booking struct {
 	ID             string
-	SlotID         string
+	SlotID         *string
+	RoomID         string
+	StartTime      time.Time
+	EndTime        time.Time
 	UserID         string
 	Status         BookingStatus
 	ConferenceLink *string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+}
+
+type BookedInterval struct {
+	ID        string
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 func (b *Booking) Cancel() {

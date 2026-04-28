@@ -532,10 +532,19 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "endTime": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
+                "roomId": {
+                    "type": "string"
+                },
                 "slotId": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 },
                 "status": {
@@ -566,7 +575,13 @@ const docTemplate = `{
                 "createConferenceLink": {
                     "type": "boolean"
                 },
-                "slotId": {
+                "endTime": {
+                    "type": "string"
+                },
+                "roomId": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 }
             }

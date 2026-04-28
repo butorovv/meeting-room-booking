@@ -2,6 +2,7 @@ package transport
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -9,23 +10,29 @@ import (
 )
 
 func TestCreateBookingRequest_Validate(t *testing.T) {
-	req := CreateBookingRequest{SlotID: "slot1"}
+	startTime := time.Date(2030, 4, 8, 9, 0, 0, 0, time.UTC)
+	req := CreateBookingRequest{
+		RoomID:    "room1",
+		StartTime: startTime.Format(time.RFC3339),
+		EndTime:   startTime.Add(30 * time.Minute).Format(time.RFC3339),
+	}
 	assert.NoError(t, req.Validate())
 
-	req.SlotID = ""
+	req.RoomID = ""
 	assert.Error(t, req.Validate())
 }
 
 func TestToBookingResponse(t *testing.T) {
+	slotID := "slot1"
 	booking := &domain.Booking{
 		ID:     "book1",
-		SlotID: "slot1",
+		SlotID: &slotID,
 		UserID: "user1",
 		Status: domain.BookingActive,
 	}
 	resp := ToBookingResponse(booking)
 	assert.Equal(t, "book1", resp.ID)
-	assert.Equal(t, "slot1", resp.SlotID)
+	assert.Equal(t, "slot1", *resp.SlotID)
 	assert.Equal(t, "active", resp.Status)
 }
 

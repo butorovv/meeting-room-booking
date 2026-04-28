@@ -11,6 +11,7 @@ import (
 
 type RoomRepositoryInterface interface {
 	Create(ctx context.Context, room *domain.Room) error
+	ExistsByID(ctx context.Context, id string) (bool, error)
 	List(ctx context.Context) ([]*domain.Room, error)
 }
 
