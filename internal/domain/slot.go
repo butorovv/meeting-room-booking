@@ -14,7 +14,7 @@ type Slot struct {
 	IsBooked  bool      `json:"isBooked"`
 	BookingID string    `json:"bookingId,omitempty"`
 	CreatedAt time.Time `json:"-"`
-} // создается при генерации слота
+}
 
 func (s *Slot) IsInPast() bool {
 	return time.Now().After(s.StartTime)

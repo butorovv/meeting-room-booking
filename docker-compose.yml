@@ -19,6 +19,16 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   app:
     build: .
     container_name: room_booking_app
@@ -27,6 +37,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -34,6 +46,9 @@ services:
       DB_PASSWORD: password
       DB_NAME: room_booking
       JWT_SECRET: test_secret_key_for_development
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
 
 volumes:
   postgres_data:
