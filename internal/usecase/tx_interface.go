@@ -7,8 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// Tx defines the interface for a database transaction.
-// It's used to abstract the underlying pgx.Tx implementation for easier testing.
 type Tx interface {
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
