@@ -48,7 +48,6 @@ func GenerateSlots(schedule *domain.Schedule, date time.Time) []*domain.Slot {
 			StartTime: start,
 			EndTime:   end,
 			IsBooked:  false,
-			CreatedAt: time.Now().UTC(),
 		})
 	}
 

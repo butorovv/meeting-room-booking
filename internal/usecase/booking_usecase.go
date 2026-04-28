@@ -115,7 +115,8 @@ func (uc *BookingUseCase) CreateBooking(ctx context.Context, userID, roomID stri
 	// 7. Вставка через транзакцию
 	err = uc.bookingRepo.CreateWithTx(ctx, tx, booking)
 	if err != nil {
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return nil, domain.ErrSlotAlreadyBooked
 		}
 		return nil, err

@@ -75,9 +75,9 @@ func main() {
 	mux.Handle("POST /rooms/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(roomHandler.CreateRoom))))
 	mux.Handle("POST /rooms/{roomId}/schedule/create", authMiddleware(middleware.AdminOnly(http.HandlerFunc(scheduleHandler.CreateSchedule))))
 	mux.Handle("GET /rooms/{roomId}/slots/list", authMiddleware(http.HandlerFunc(slotHandler.GetAvailableSlots)))
-	mux.Handle("POST /bookings/create", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
-	mux.Handle("GET /bookings/my", authMiddleware(http.HandlerFunc(bookingHandler.MyBookings)))
-	mux.Handle("POST /bookings/{bookingId}/cancel", authMiddleware(http.HandlerFunc(bookingHandler.CancelBooking)))
+	mux.Handle("POST /bookings/create", authMiddleware(middleware.UserOnly(http.HandlerFunc(bookingHandler.CreateBooking))))
+	mux.Handle("POST /bookings/{bookingId}/cancel", authMiddleware(middleware.UserOnly(http.HandlerFunc(bookingHandler.CancelBooking))))
+	mux.Handle("GET /bookings/my", authMiddleware(middleware.UserOnly(http.HandlerFunc(bookingHandler.MyBookings))))
 	mux.Handle("GET /bookings/list", authMiddleware(middleware.AdminOnly(http.HandlerFunc(bookingHandler.ListBookings))))
 
 	logger.Global().Info("Server started", "addr", ":"+cfg.AppPort)

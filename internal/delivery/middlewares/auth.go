@@ -98,3 +98,15 @@ func AdminOnly(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// UserOnly проверяет, что роль user
+func UserOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, ok := RoleFromContext(r.Context())
+		if !ok || role != "user" {
+			http.Error(w, `{"error":"user access required"}`, http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
