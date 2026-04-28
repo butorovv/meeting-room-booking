@@ -6,11 +6,12 @@ package mock
 
 import (
 	context "context"
-	domain "github.com/butorovv/meeting-room-booking/internal/domain"
 	reflect "reflect"
 	time "time"
 
+	domain "github.com/butorovv/meeting-room-booking/internal/domain"
 	gomock "github.com/golang/mock/gomock"
+	pgx "github.com/jackc/pgx/v5"
 )
 
 // MockBookingRepositoryInterface is a mock of BookingRepositoryInterface interface.
@@ -50,6 +51,20 @@ func (mr *MockBookingRepositoryInterfaceMockRecorder) Create(ctx, booking interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).Create), ctx, booking)
 }
 
+// CreateWithTx mocks base method.
+func (m *MockBookingRepositoryInterface) CreateWithTx(ctx context.Context, tx pgx.Tx, booking *domain.Booking) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateWithTx", ctx, tx, booking)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateWithTx indicates an expected call of CreateWithTx.
+func (mr *MockBookingRepositoryInterfaceMockRecorder) CreateWithTx(ctx, tx, booking interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWithTx", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).CreateWithTx), ctx, tx, booking)
+}
+
 // GetActiveBookedIntervals mocks base method.
 func (m *MockBookingRepositoryInterface) GetActiveBookedIntervals(ctx context.Context, roomID string, startDate, endDate time.Time) ([]domain.BookedInterval, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +78,21 @@ func (m *MockBookingRepositoryInterface) GetActiveBookedIntervals(ctx context.Co
 func (mr *MockBookingRepositoryInterfaceMockRecorder) GetActiveBookedIntervals(ctx, roomID, startDate, endDate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveBookedIntervals", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).GetActiveBookedIntervals), ctx, roomID, startDate, endDate)
+}
+
+// GetActiveBookedIntervalsWithTx mocks base method.
+func (m *MockBookingRepositoryInterface) GetActiveBookedIntervalsWithTx(ctx context.Context, tx pgx.Tx, roomID string, startDate, endDate time.Time) ([]domain.BookedInterval, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetActiveBookedIntervalsWithTx", ctx, tx, roomID, startDate, endDate)
+	ret0, _ := ret[0].([]domain.BookedInterval)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveBookedIntervalsWithTx indicates an expected call of GetActiveBookedIntervalsWithTx.
+func (mr *MockBookingRepositoryInterfaceMockRecorder) GetActiveBookedIntervalsWithTx(ctx, tx, roomID, startDate, endDate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveBookedIntervalsWithTx", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).GetActiveBookedIntervalsWithTx), ctx, tx, roomID, startDate, endDate)
 }
 
 // GetAll mocks base method.
@@ -138,4 +168,18 @@ func (m *MockBookingRepositoryInterface) UpdateStatus(ctx context.Context, id, s
 func (mr *MockBookingRepositoryInterfaceMockRecorder) UpdateStatus(ctx, id, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).UpdateStatus), ctx, id, status)
+}
+
+// UpdateStatusWithTx mocks base method.
+func (m *MockBookingRepositoryInterface) UpdateStatusWithTx(ctx context.Context, tx pgx.Tx, id, status string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatusWithTx", ctx, tx, id, status)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatusWithTx indicates an expected call of UpdateStatusWithTx.
+func (mr *MockBookingRepositoryInterfaceMockRecorder) UpdateStatusWithTx(ctx, tx, id, status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatusWithTx", reflect.TypeOf((*MockBookingRepositoryInterface)(nil).UpdateStatusWithTx), ctx, tx, id, status)
 }

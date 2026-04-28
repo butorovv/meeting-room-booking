@@ -45,8 +45,9 @@ mocks:
 	mockgen -source=internal/usecase/booking_usecase.go -destination=internal/usecase/mock/booking_repo_mock.go -package=mock
 	mockgen -source=internal/usecase/room_usecase.go -destination=internal/usecase/mock/room_repo_mock.go -package=mock
 	mockgen -source=internal/usecase/schedule_usecase.go -destination=internal/usecase/mock/schedule_repo_mock.go -package=mock
-	mockgen -source=internal/usecase/interfaces.go -destination=internal/usecase/mock/slot_repo_mock.go -package=mock
+	mockgen -source=internal/usecase/interfaces.go -destination=internal/usecase/mock/pgxpool_mock.go -package=mock
 	mockgen -source=internal/usecase/auth_usecase.go -destination=internal/usecase/mock/auth_repo_mock.go -package=mock
+	mockgen -source=internal/usecase/tx_interface.go -destination=internal/usecase/mock/tx_mock.go -package=mock
 	@echo "======== USECASE MOCKS (interfaces from delivery/http) ========"
 	mockgen -source=internal/delivery/http/booking_handler.go -destination=internal/delivery/http/mock/booking_usecase_mock.go -package=mock
 	mockgen -source=internal/delivery/http/room_handler.go -destination=internal/delivery/http/mock/room_usecase_mock.go -package=mock

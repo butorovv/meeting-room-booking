@@ -6,10 +6,10 @@ package mock
 
 import (
 	context "context"
-	domain "github.com/butorovv/meeting-room-booking/internal/domain"
 	reflect "reflect"
 	time "time"
 
+	domain "github.com/butorovv/meeting-room-booking/internal/domain"
 	gomock "github.com/golang/mock/gomock"
 )
 

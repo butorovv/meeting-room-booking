@@ -41,3 +41,6 @@ ALTER TABLE bookings ALTER COLUMN slot_id DROP NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_active_booking_room_time
     ON bookings(room_id, start_time)
     WHERE status = 'active';
+
+-- Note: `end_time` is not included in the unique index because slot duration is fixed at 30 minutes.
+-- This makes the index smaller and faster. The application logic ensures that `end_time` is always `start_time + 30 minutes`.

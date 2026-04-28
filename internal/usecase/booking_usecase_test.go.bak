@@ -1,0 +1,93 @@
+package usecase_test
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/butorovv/meeting-room-booking/internal/domain"
+	"github.com/butorovv/meeting-room-booking/internal/usecase"
+	"github.com/butorovv/meeting-room-booking/internal/usecase/mock"
+	"github.com/golang/mock/gomock"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestBookingUseCase_CreateBooking(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockPool := mock.NewMockPgxPoolIface(ctrl)
+	mockTx := mock.NewMockTx(ctrl)
+	mockBookingRepo := mock.NewMockBookingRepositoryInterface(ctrl)
+	mockRoomRepo := mock.NewMockRoomRepositoryInterface(ctrl)
+	mockScheduleRepo := mock.NewMockScheduleRepositoryInterface(ctrl)
+
+	uc := usecase.NewBookingUseCase(mockPool, mockBookingRepo, mockRoomRepo, mockScheduleRepo)
+
+	ctx := context.Background()
+	userID := "user-id"
+	roomID := "room-id"
+	startTime := time.Now().Add(time.Hour).Truncate(30 * time.Minute)
+	endTime := startTime.Add(domain.SlotDuration)
+	dayStart := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, time.UTC)
+	dayEnd := dayStart.AddDate(0, 0, 1)
+
+	t.Run("success", func(t *testing.T) {
+		mockRoomRepo.EXPECT().ExistsByID(ctx, roomID).Return(true, nil)
+		mockScheduleRepo.EXPECT().GetByRoomID(ctx, roomID).Return(&domain.Schedule{
+			DaysMask:  domain.WeekdayToMask(startTime.Weekday()),
+			StartTime: "00:00",
+			EndTime:   "23:59",
+		}, nil)
+		mockPool.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockBookingRepo.EXPECT().GetActiveBookedIntervalsWithTx(ctx, mockTx, roomID, dayStart, dayEnd).Return([]domain.BookedInterval{}, nil)
+		mockBookingRepo.EXPECT().CreateWithTx(ctx, mockTx, gomock.Any()).Return(nil)
+		mockTx.EXPECT().Commit(ctx).Return(nil)
+		mockTx.EXPECT().Rollback(ctx).Return(pgx.ErrTxClosed)
+
+		booking, err := uc.CreateBooking(ctx, userID, roomID, startTime, endTime, nil)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, booking)
+		assert.Equal(t, userID, booking.UserID)
+		assert.Equal(t, roomID, booking.RoomID)
+	})
+
+	t.Run("slot already booked by unique constraint", func(t *testing.T) {
+		pgErr := &pgconn.PgError{Code: "23505"}
+		mockRoomRepo.EXPECT().ExistsByID(ctx, roomID).Return(true, nil)
+		mockScheduleRepo.EXPECT().GetByRoomID(ctx, roomID).Return(&domain.Schedule{
+			DaysMask:  domain.WeekdayToMask(startTime.Weekday()),
+			StartTime: "00:00",
+			EndTime:   "23:59",
+		}, nil)
+		mockPool.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockBookingRepo.EXPECT().GetActiveBookedIntervalsWithTx(ctx, mockTx, roomID, dayStart, dayEnd).Return([]domain.BookedInterval{}, nil)
+		mockBookingRepo.EXPECT().CreateWithTx(ctx, mockTx, gomock.Any()).Return(pgErr)
+		mockTx.EXPECT().Rollback(ctx).Return(nil)
+
+		_, err := uc.CreateBooking(ctx, userID, roomID, startTime, endTime, nil)
+		assert.ErrorIs(t, err, domain.ErrSlotAlreadyBooked)
+	})
+
+	t.Run("slot already booked by overlap check", func(t *testing.T) {
+		bookedIntervals := []domain.BookedInterval{{
+			StartTime: startTime,
+			EndTime:   endTime,
+		}}
+		mockRoomRepo.EXPECT().ExistsByID(ctx, roomID).Return(true, nil)
+		mockScheduleRepo.EXPECT().GetByRoomID(ctx, roomID).Return(&domain.Schedule{
+			DaysMask:  domain.WeekdayToMask(startTime.Weekday()),
+			StartTime: "00:00",
+			EndTime:   "23:59",
+		}, nil)
+		mockPool.EXPECT().Begin(ctx).Return(mockTx, nil)
+		mockBookingRepo.EXPECT().GetActiveBookedIntervalsWithTx(ctx, mockTx, roomID, dayStart, dayEnd).Return(bookedIntervals, nil)
+		mockTx.EXPECT().Rollback(ctx).Return(nil)
+
+		_, err := uc.CreateBooking(ctx, userID, roomID, startTime, endTime, nil)
+		assert.ErrorIs(t, err, domain.ErrSlotAlreadyBooked)
+	})
+}

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/butorovv/meeting-room-booking/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-
-	"github.com/butorovv/meeting-room-booking/internal/domain"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type BookingRepositoryInterface interface {
@@ -16,6 +16,7 @@ type BookingRepositoryInterface interface {
 	CreateWithTx(ctx context.Context, tx pgx.Tx, booking *domain.Booking) error
 	GetBySlotID(ctx context.Context, slotID string) (*domain.Booking, error)
 	GetActiveBookedIntervals(ctx context.Context, roomID string, startDate, endDate time.Time) ([]domain.BookedInterval, error)
+	GetActiveBookedIntervalsWithTx(ctx context.Context, tx pgx.Tx, roomID string, startDate, endDate time.Time) ([]domain.BookedInterval, error)
 	GetByUserID(ctx context.Context, userID string) ([]*domain.Booking, error)
 	GetAll(ctx context.Context, limit, offset int) ([]*domain.Booking, int, error)
 	UpdateStatus(ctx context.Context, id, status string) error
@@ -87,7 +88,7 @@ func (uc *BookingUseCase) CreateBooking(ctx context.Context, userID, roomID stri
 	dayStart := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, time.UTC)
 	dayEnd := dayStart.AddDate(0, 0, 1)
 
-	bookedIntervals, err := uc.bookingRepo.GetActiveBookedIntervals(ctx, roomID, dayStart, dayEnd)
+	bookedIntervals, err := uc.bookingRepo.GetActiveBookedIntervalsWithTx(ctx, tx, roomID, dayStart, dayEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +115,9 @@ func (uc *BookingUseCase) CreateBooking(ctx context.Context, userID, roomID stri
 	// 7. Вставка через транзакцию
 	err = uc.bookingRepo.CreateWithTx(ctx, tx, booking)
 	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
+			return nil, domain.ErrSlotAlreadyBooked
+		}
 		return nil, err
 	}
 

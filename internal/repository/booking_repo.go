@@ -92,6 +92,25 @@ func (r *BookingRepository) GetActiveBookedIntervals(ctx context.Context, roomID
 	return intervals, rows.Err()
 }
 
+func (r *BookingRepository) GetActiveBookedIntervalsWithTx(ctx context.Context, tx pgx.Tx, roomID string, startDate, endDate time.Time) ([]domain.BookedInterval, error) {
+	rows, err := tx.Query(ctx, getActiveBookedIntervalsSQL, roomID, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	intervals := make([]domain.BookedInterval, 0)
+	for rows.Next() {
+		var interval domain.BookedInterval
+		if err := rows.Scan(&interval.ID, &interval.StartTime, &interval.EndTime); err != nil {
+			return nil, err
+		}
+		intervals = append(intervals, interval)
+	}
+
+	return intervals, rows.Err()
+}
+
 func (r *BookingRepository) GetByUserID(ctx context.Context, userID string) ([]*domain.Booking, error) {
 	rows, err := r.db.Query(ctx, getBookingsByUserSQL, userID)
 	if err != nil {
